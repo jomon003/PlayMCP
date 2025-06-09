@@ -1,0 +1,24 @@
+# Source files
+src/
+
+# Test files
+test*
+*.test.*
+coverage/
+
+# Development config
+tsconfig.json
+.gitignore
+.git/
+.vscode/
+
+# Documentation
+mcp-plan.md
+
+# Temporary files
+*.log
+.DS_Store
+
+# Scripts
+*.bat
+*.sh
