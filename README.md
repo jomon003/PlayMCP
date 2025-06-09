@@ -2,6 +2,10 @@
 
 A comprehensive MCP (Model Context Protocol) server for browser automation using Playwright. This server provides powerful tools for web scraping, testing, and automation.
 
+<a href="https://glama.ai/mcp/servers/@jomon003/PlayMCP">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@jomon003/PlayMCP/badge" alt="PlayBrowser Automation Server MCP server" />
+</a>
+
 ## Features
 
 ### Core Browser Controls
