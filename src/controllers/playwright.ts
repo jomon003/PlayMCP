@@ -163,14 +163,44 @@ class PlaywrightController {
     }
   }
 
-  async scroll(x: number, y: number): Promise<void> {
+  async scroll(x: number, y: number, smooth: boolean = false): Promise<{before: {x: number, y: number}, after: {x: number, y: number}}> {
     try {
       if (!this.isInitialized() || !this.state.page) {
         throw new Error('Browser not initialized');
       }
-      this.log('Scrolling', { x, y });
-      await this.state.page.evaluate(`window.scrollBy(${x}, ${y})`);
-      this.log('Scroll complete');
+      
+      this.log('Scrolling', { x, y, smooth });
+      
+      // Get scroll position before scrolling
+      const beforeScroll = await this.state.page.evaluate(() => ({
+        x: window.scrollX,
+        y: window.scrollY
+      }));
+      
+      // Perform scroll with optional smooth behavior
+      await this.state.page.evaluate((args: {x: number, y: number, smooth: boolean}) => {
+        window.scrollBy({
+          left: args.x,
+          top: args.y,
+          behavior: args.smooth ? 'smooth' : 'auto'
+        });
+      }, { x, y, smooth });
+      
+      // Wait for scroll to complete
+      await this.state.page.waitForTimeout(smooth ? 500 : 100);
+      
+      // Get scroll position after scrolling
+      const afterScroll = await this.state.page.evaluate(() => ({
+        x: window.scrollX,
+        y: window.scrollY
+      }));
+      
+      this.log('Scroll complete', { before: beforeScroll, after: afterScroll });
+      
+      return {
+        before: beforeScroll,
+        after: afterScroll
+      };
     } catch (error: any) {
       console.error('Scroll error:', error);
       throw new BrowserError('Failed to scroll', 'Check if scroll values are valid');
@@ -483,6 +513,91 @@ class PlaywrightController {
     } catch (error: any) {
       console.error('Execute JavaScript error:', error);
       throw new BrowserError('Failed to execute JavaScript', 'Check if the JavaScript syntax is valid');
+    }
+  }
+
+  async getElementHierarchy(
+    selector: string = 'body', 
+    maxDepth: number = 3, 
+    includeText: boolean = false, 
+    includeAttributes: boolean = false
+  ): Promise<any> {
+    try {
+      if (!this.isInitialized()) {
+        throw new Error('Browser not initialized');
+      }
+      
+      this.log('Getting element hierarchy', { selector, maxDepth, includeText, includeAttributes });
+      
+      const hierarchy = await this.state.page?.evaluate((args: {
+        selector: string, 
+        maxDepth: number, 
+        includeText: boolean, 
+        includeAttributes: boolean
+      }) => {
+        const { selector, maxDepth, includeText, includeAttributes } = args;
+        
+        function getElementInfo(element: Element) {
+          const info: any = {
+            tagName: element.tagName.toLowerCase(),
+            id: element.id || undefined,
+            className: element.className || undefined,
+            children: []
+          };
+          
+          if (includeText && element.textContent) {
+            // Get only direct text content, not from children
+            const directText = Array.from(element.childNodes)
+              .filter(node => node.nodeType === Node.TEXT_NODE)
+              .map(node => node.textContent?.trim())
+              .filter(text => text)
+              .join(' ');
+            if (directText) {
+              info.text = directText;
+            }
+          }
+          
+          if (includeAttributes && element.attributes.length > 0) {
+            info.attributes = {};
+            for (let i = 0; i < element.attributes.length; i++) {
+              const attr = element.attributes[i];
+              if (attr.name !== 'id' && attr.name !== 'class') {
+                info.attributes[attr.name] = attr.value;
+              }
+            }
+          }
+          
+          return info;
+        }
+        
+        function traverseElement(element: Element, currentDepth: number): any {
+          const elementInfo = getElementInfo(element);
+          
+          if (currentDepth < maxDepth || maxDepth === -1) {
+            const children = Array.from(element.children);
+            elementInfo.children = children.map(child => 
+              traverseElement(child, currentDepth + 1)
+            );
+          } else if (element.children.length > 0) {
+            elementInfo.childrenCount = element.children.length;
+          }
+          
+          return elementInfo;
+        }
+        
+        const rootElement = document.querySelector(selector);
+        if (!rootElement) {
+          throw new Error(`Element not found: ${selector}`);
+        }
+        
+        return traverseElement(rootElement, 0);
+      }, { selector, maxDepth, includeText, includeAttributes });
+      
+      this.log('Element hierarchy retrieved');
+      return hierarchy;
+    } catch (error: any) {
+      console.error('Get element hierarchy error:', error);
+      throw new BrowserError('Failed to get element hierarchy', 'Check if the selector exists');
     }
   }
 

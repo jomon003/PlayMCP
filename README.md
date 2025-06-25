@@ -1,6 +1,6 @@
 # PlayMCP Browser Automation Server
 
-A comprehensive MCP (Model Context Protocol) server for browser automation using Playwright. This server provides powerful tools for web scraping, testing, and automation.
+A comprehensive MCP (Model Context Protocol) server for browser automation using Playwright. This server provides **21 powerful tools** for web scraping, testing, and automation.
 
 ## Features
 
@@ -10,7 +10,7 @@ A comprehensive MCP (Model Context Protocol) server for browser automation using
 - **click** - Click elements using CSS selectors
 - **type** - Type text into input fields
 - **moveMouse** - Move mouse to specific coordinates
-- **scroll** - Scroll the page by specified amounts
+- **scroll** - Scroll the page by specified amounts with enhanced feedback and smooth scrolling support
 - **screenshot** - Take screenshots of the page, viewport, or specific elements
 - **closeBrowser** - Close the browser instance
 
@@ -26,6 +26,7 @@ A comprehensive MCP (Model Context Protocol) server for browser automation using
 - **getImages** - Get all images with src, alt, and dimensions
 - **getForms** - Get all forms with their fields and attributes
 - **getElementContent** - Get HTML and text content of specific elements
+- **getElementHierarchy** - Get the hierarchical DOM structure with parent-child relationships
 
 ### Advanced Capabilities
 - **executeJavaScript** - Execute arbitrary JavaScript code on the page and return results
@@ -39,7 +40,7 @@ A comprehensive MCP (Model Context Protocol) server for browser automation using
 | `click` | Click element | `selector: string` |
 | `type` | Type text into element | `selector: string, text: string` |
 | `moveMouse` | Move mouse to coordinates | `x: number, y: number` |
-| `scroll` | Scroll page | `x: number, y: number` |
+| `scroll` | Scroll page with feedback | `x: number, y: number, smooth?: boolean` |
 | `screenshot` | Take screenshot | `path: string, type?: string, selector?: string` |
 | `getPageSource` | Get HTML source | None |
 | `getPageText` | Get text content | None |
@@ -52,6 +53,7 @@ A comprehensive MCP (Model Context Protocol) server for browser automation using
 | `getImages` | Get all images | None |
 | `getForms` | Get all forms | None |
 | `getElementContent` | Get element content | `selector: string` |
+| `getElementHierarchy` | Get DOM hierarchy | `selector?: string, maxDepth?: number, includeText?: boolean, includeAttributes?: boolean` |
 | `executeJavaScript` | Run JavaScript | `script: string` |
 | `closeBrowser` | Close browser | None |
 
@@ -190,10 +192,33 @@ await click({ selector: "#submit" })
 
 **Page Interaction:**
 ```javascript
-// Scroll and interact
-await scroll({ x: 0, y: 500 })
+// Enhanced scrolling with feedback
+await scroll({ x: 0, y: 500, smooth: false })
+// Returns: { before: {x: 0, y: 0}, after: {x: 0, y: 500}, scrolled: {x: 0, y: 500} }
+
+// Smooth scrolling
+await scroll({ x: 0, y: 300, smooth: true })
+
+// Mouse interaction
 await moveMouse({ x: 100, y: 200 })
 await click({ selector: ".dropdown-menu" })
+```
+
+**DOM Structure Analysis:**
+```javascript
+// Get page hierarchy (3 levels deep)
+await getElementHierarchy({ maxDepth: 3 })
+
+// Get detailed hierarchy with text and attributes
+await getElementHierarchy({ 
+  selector: "#main-content", 
+  maxDepth: -1, 
+  includeText: true, 
+  includeAttributes: true 
+})
+
+// Get basic structure of a specific section
+await getElementHierarchy({ selector: ".sidebar", maxDepth: 2 })
 ```
 
 **Advanced JavaScript Execution:**
@@ -242,6 +267,10 @@ await screenshot({ path: "./element.png", type: "element", selector: "#main-cont
    await navigate({ url: "https://news.ycombinator.com" })
    const links = await getLinks()
    console.log(`Found ${links.length} links`)
+   
+   // Analyze page structure
+   const hierarchy = await getElementHierarchy({ maxDepth: 2 })
+   console.log('Page structure:', hierarchy)
    ```
 
 ## Development

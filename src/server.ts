@@ -209,7 +209,7 @@ const EXECUTE_JAVASCRIPT_TOOL: Tool = {
 
 const SCROLL_TOOL: Tool = {
   name: "scroll",
-  description: "Scroll the page by specified amounts",
+  description: "Scroll the page by specified amounts with enhanced feedback",
   inputSchema: {
     type: "object",
     properties: {
@@ -220,9 +220,40 @@ const SCROLL_TOOL: Tool = {
       y: { 
         type: "number", 
         description: "Vertical scroll amount in pixels (positive = down, negative = up)"
+      },
+      smooth: {
+        type: "boolean",
+        description: "Whether to use smooth scrolling animation (default: false)"
       }
     },
     required: ["x", "y"]
+  }
+};
+
+const GET_ELEMENT_HIERARCHY_TOOL: Tool = {
+  name: "getElementHierarchy",
+  description: "Get the hierarchical structure of page elements with parent-child relationships",
+  inputSchema: {
+    type: "object",
+    properties: {
+      selector: {
+        type: "string",
+        description: "CSS selector for root element (default: 'body')"
+      },
+      maxDepth: {
+        type: "number",
+        description: "Maximum depth to traverse (-1 for unlimited, default: 3)"
+      },
+      includeText: {
+        type: "boolean",
+        description: "Include text content of elements (default: false)"
+      },
+      includeAttributes: {
+        type: "boolean",
+        description: "Include element attributes (default: false)"
+      }
+    },
+    required: []
   }
 };
 
@@ -255,6 +286,7 @@ const tools = {
   getImages: GET_IMAGES_TOOL,
   getForms: GET_FORMS_TOOL,
   getElementContent: GET_ELEMENT_CONTENT_TOOL,
+  getElementHierarchy: GET_ELEMENT_HIERARCHY_TOOL,
   executeJavaScript: EXECUTE_JAVASCRIPT_TOOL,
   closeBrowser: CLOSE_BROWSER_TOOL
 };
@@ -349,9 +381,24 @@ server.setRequestHandler('callTool', async (request) => {
             isError: true
           };
         }
-        await playwrightController.scroll(args.x, args.y);
+        const scrollResult = await playwrightController.scroll(
+          args.x, 
+          args.y, 
+          args.smooth as boolean || false
+        );
         return {
-          content: [{ type: "text", text: "Page scrolled successfully" }]
+          content: [{ 
+            type: "text", 
+            text: JSON.stringify({
+              message: "Page scrolled successfully",
+              before: scrollResult.before,
+              after: scrollResult.after,
+              scrolled: {
+                x: scrollResult.after.x - scrollResult.before.x,
+                y: scrollResult.after.y - scrollResult.before.y
+              }
+            }, null, 2)
+          }]
         };
       }
 
@@ -446,6 +493,18 @@ server.setRequestHandler('callTool', async (request) => {
         const content = await playwrightController.getElementContent(args.selector as string);
         return {
           content: [{ type: "text", text: JSON.stringify(content, null, 2) }]
+        };
+      }
+
+      case 'getElementHierarchy': {
+        const hierarchy = await playwrightController.getElementHierarchy(
+          args.selector as string || 'body',
+          args.maxDepth as number || 3,
+          args.includeText as boolean || false,
+          args.includeAttributes as boolean || false
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(hierarchy, null, 2) }]
         };
       }
 
