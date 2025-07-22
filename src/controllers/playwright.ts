@@ -601,6 +601,304 @@ class PlaywrightController {
     }
   }
 
+  // Additional navigation methods
+  async goForward(): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Going forward');
+      await this.state.page.goForward();
+      this.log('Forward navigation complete');
+    } catch (error: any) {
+      console.error('Go forward error:', error);
+      throw new BrowserError('Failed to go forward', 'Check if there is a next page in history');
+    }
+  }
+
+  // Enhanced interaction methods
+  async hover(selector: string): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Hovering over element', { selector });
+      const locator = this.state.page.locator(selector);
+      await locator.hover();
+      this.log('Hover complete');
+    } catch (error: any) {
+      console.error('Hover error:', error);
+      throw new BrowserError('Failed to hover over element', 'Check if the selector exists and is visible');
+    }
+  }
+
+  async dragAndDrop(sourceSelector: string, targetSelector: string): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Performing drag and drop', { sourceSelector, targetSelector });
+      const sourceLocator = this.state.page.locator(sourceSelector);
+      const targetLocator = this.state.page.locator(targetSelector);
+      await sourceLocator.dragTo(targetLocator);
+      this.log('Drag and drop complete');
+    } catch (error: any) {
+      console.error('Drag and drop error:', error);
+      throw new BrowserError('Failed to drag and drop', 'Check if both selectors exist and are interactable');
+    }
+  }
+
+  async selectOption(selector: string, values: string[]): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Selecting options', { selector, values });
+      const locator = this.state.page.locator(selector);
+      await locator.selectOption(values);
+      this.log('Select option complete');
+    } catch (error: any) {
+      console.error('Select option error:', error);
+      throw new BrowserError('Failed to select option', 'Check if the selector exists and values are valid');
+    }
+  }
+
+  async pressKey(key: string): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Pressing key', { key });
+      await this.state.page.keyboard.press(key);
+      this.log('Key press complete');
+    } catch (error: any) {
+      console.error('Press key error:', error);
+      throw new BrowserError('Failed to press key', 'Check if the key name is valid');
+    }
+  }
+
+  async waitForText(text: string, timeout: number = 30000): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Waiting for text', { text, timeout });
+      await this.state.page.waitForSelector(`text=${text}`, { timeout });
+      this.log('Text found');
+    } catch (error: any) {
+      console.error('Wait for text error:', error);
+      throw new BrowserError('Text not found within timeout', 'Check if the text appears on the page');
+    }
+  }
+
+  async waitForSelector(selector: string, timeout: number = 30000): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Waiting for selector', { selector, timeout });
+      await this.state.page.waitForSelector(selector, { timeout });
+      this.log('Selector found');
+    } catch (error: any) {
+      console.error('Wait for selector error:', error);
+      throw new BrowserError('Selector not found within timeout', 'Check if the selector appears on the page');
+    }
+  }
+
+  async resize(width: number, height: number): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Resizing viewport', { width, height });
+      await this.state.page.setViewportSize({ width, height });
+      this.log('Resize complete');
+    } catch (error: any) {
+      console.error('Resize error:', error);
+      throw new BrowserError('Failed to resize viewport', 'Check if width and height are positive numbers');
+    }
+  }
+
+  // Dialog handling
+  async handleDialog(accept: boolean, promptText?: string): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Setting up dialog handler', { accept, promptText });
+      
+      this.state.page.once('dialog', async dialog => {
+        this.log('Dialog detected', { type: dialog.type(), message: dialog.message() });
+        if (accept) {
+          await dialog.accept(promptText);
+        } else {
+          await dialog.dismiss();
+        }
+        this.log('Dialog handled');
+      });
+    } catch (error: any) {
+      console.error('Handle dialog error:', error);
+      throw new BrowserError('Failed to handle dialog', 'Check if there is a dialog to handle');
+    }
+  }
+
+  // Console and network methods
+  async getConsoleMessages(): Promise<string[]> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Getting console messages');
+      
+      const messages: string[] = [];
+      
+      // Listen to console events
+      this.state.page.on('console', msg => {
+        messages.push(`[${msg.type().toUpperCase()}] ${msg.text()}`);
+      });
+      
+      // Return collected messages
+      this.log('Console messages retrieved');
+      return messages;
+    } catch (error: any) {
+      console.error('Get console messages error:', error);
+      throw new BrowserError('Failed to get console messages', 'Browser console monitoring error');
+    }
+  }
+
+  async getNetworkRequests(): Promise<Array<{url: string, method: string, status?: number}>> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Getting network requests');
+      
+      const requests: Array<{url: string, method: string, status?: number}> = [];
+      
+      // Listen to request events
+      this.state.page.on('request', request => {
+        requests.push({
+          url: request.url(),
+          method: request.method()
+        });
+      });
+      
+      this.state.page.on('response', response => {
+        const request = requests.find(req => req.url === response.url());
+        if (request) {
+          request.status = response.status();
+        }
+      });
+      
+      this.log('Network requests retrieved');
+      return requests;
+    } catch (error: any) {
+      console.error('Get network requests error:', error);
+      throw new BrowserError('Failed to get network requests', 'Network monitoring error');
+    }
+  }
+
+  async uploadFiles(selector: string, filePaths: string[]): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Uploading files', { selector, filePaths });
+      const locator = this.state.page.locator(selector);
+      await locator.setInputFiles(filePaths);
+      this.log('File upload complete');
+    } catch (error: any) {
+      console.error('File upload error:', error);
+      throw new BrowserError('Failed to upload files', 'Check if selector is a file input and files exist');
+    }
+  }
+
+  async evaluateWithReturn(script: string): Promise<any> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Evaluating JavaScript with return', { script });
+      const result = await this.state.page.evaluate(script);
+      this.log('JavaScript evaluation complete');
+      return result;
+    } catch (error: any) {
+      console.error('JavaScript evaluation error:', error);
+      throw new BrowserError('Failed to evaluate JavaScript', 'Check if the script is valid JavaScript');
+    }
+  }
+
+  // Enhanced screenshot functionality
+  async takeScreenshot(path: string, options?: {fullPage?: boolean, element?: string}): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Taking screenshot', { path, options });
+      
+      if (options?.element) {
+        const locator = this.state.page.locator(options.element);
+        await locator.screenshot({ path });
+      } else {
+        await this.state.page.screenshot({ path, fullPage: options?.fullPage });
+      }
+      
+      this.log('Screenshot saved');
+    } catch (error: any) {
+      console.error('Screenshot error:', error);
+      throw new BrowserError('Failed to take screenshot', 'Check if the path is writable');
+    }
+  }
+
+  // Mouse coordinate methods
+  async mouseMove(x: number, y: number): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Moving mouse', { x, y });
+      await this.state.page.mouse.move(x, y);
+      this.currentMousePosition = { x, y };
+      this.log('Mouse move complete');
+    } catch (error: any) {
+      console.error('Mouse move error:', error);
+      throw new BrowserError('Failed to move mouse', 'Check if coordinates are valid');
+    }
+  }
+
+  async mouseClick(x: number, y: number): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Clicking at coordinates', { x, y });
+      await this.state.page.mouse.click(x, y);
+      this.currentMousePosition = { x, y };
+      this.log('Mouse click complete');
+    } catch (error: any) {
+      console.error('Mouse click error:', error);
+      throw new BrowserError('Failed to click at coordinates', 'Check if coordinates are valid');
+    }
+  }
+
+  async mouseDrag(startX: number, startY: number, endX: number, endY: number): Promise<void> {
+    try {
+      if (!this.isInitialized() || !this.state.page) {
+        throw new Error('Browser not initialized');
+      }
+      this.log('Mouse drag', { startX, startY, endX, endY });
+      await this.state.page.mouse.move(startX, startY);
+      await this.state.page.mouse.down();
+      await this.state.page.mouse.move(endX, endY);
+      await this.state.page.mouse.up();
+      this.currentMousePosition = { x: endX, y: endY };
+      this.log('Mouse drag complete');
+    } catch (error: any) {
+      console.error('Mouse drag error:', error);
+      throw new BrowserError('Failed to drag mouse', 'Check if coordinates are valid');
+    }
+  }
+
   isInitialized(): boolean {
     return !!(this.state.browser?.isConnected() && this.state.context && this.state.page);
   }

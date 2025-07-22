@@ -1,12 +1,114 @@
 # PlayMCP Browser Automation Server
 
-A comprehensive MCP (Model Context Protocol) server for browser automation using Playwright. This server provides **21 powerful tools** for web scraping, testing, and automation.
+A comprehensive MCP (Model Context Protocol) server for browser automation using Playwright. This server provides **38 powerful tools** for web scraping, testing, and automation.
 
 <a href="https://glama.ai/mcp/servers/@jomon003/PlayMCP">
   <img width="380" height="200" src="https://glama.ai/mcp/servers/@jomon003/PlayMCP/badge" alt="PlayBrowser Automation Server MCP server" />
 </a>
 
 ## Features
+
+### 🚀 **Core Browser Automation** (21 tools)
+- **Navigation**: `navigate`, `goForward`, `goBack` (via scroll)
+- **Interaction**: `click`, `type`, `hover`, `dragAndDrop`, `selectOption`
+- **Mouse Control**: `moveMouse`, `mouseMove`, `mouseClick`, `mouseDrag`
+- **Keyboard**: `pressKey`
+- **Waiting**: `waitForText`, `waitForSelector`
+- **Screenshots**: `screenshot`, `takeScreenshot` (enhanced)
+- **Page Info**: `getPageSource`, `getPageText`, `getPageTitle`, `getPageUrl`
+- **Element Analysis**: `getElementContent`, `getElementHierarchy`
+- **Scripts & Styles**: `getScripts`, `getStylesheets`, `getMetaTags`
+
+### 🔍 **Advanced Data Extraction** (7 tools)
+- **Links & Images**: `getLinks`, `getImages`
+- **Forms**: `getForms`
+- **Console Monitoring**: `getConsoleMessages`
+- **Network Monitoring**: `getNetworkRequests`
+- **JavaScript Execution**: `executeJavaScript`, `evaluateWithReturn`
+
+### 📁 **File Operations** (2 tools)
+- **File Upload**: `uploadFiles`
+- **Dialog Handling**: `handleDialog`
+
+### ⚙️ **Browser Management** (8 tools)
+- **Browser Control**: `openBrowser`, `closeBrowser`
+- **Viewport Management**: `resize`
+- **Page Manipulation**: `scroll` (enhanced with feedback)
+- **Element Hierarchy**: Deep DOM analysis with configurable depth
+- **Enhanced Screenshots**: Full page, element-specific, custom paths
+- **Mouse Coordinates**: Pixel-perfect mouse control
+- **Wait Conditions**: Smart waiting for elements and text
+
+## Quick Start
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/jomon003/PlayMCP.git
+cd PlayMCP
+
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Test the server
+npm test
+```
+
+### Basic Usage
+```javascript
+// Start the server
+node ./dist/server.js
+
+// Send MCP commands via JSON-RPC
+{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}
+```
+
+## Tool Categories
+
+### 🎯 Navigation & Interaction
+- **navigate**: Go to any URL
+- **goForward**: Navigate forward in browser history 
+- **click**: Click elements with smart selector resolution
+- **type**: Type text with realistic keyboard simulation
+- **hover**: Hover over elements for tooltips and interactions
+- **dragAndDrop**: Drag elements between locations
+- **selectOption**: Choose options from dropdowns and multi-selects
+- **pressKey**: Send specific keyboard keys (Enter, Escape, etc.)
+
+### ⏱️ Smart Waiting
+- **waitForText**: Wait for specific text to appear
+- **waitForSelector**: Wait for elements to load
+- Built-in timeouts and error handling
+
+### 🖱️ Precise Mouse Control  
+- **mouseMove**: Move to exact coordinates
+- **mouseClick**: Click at specific pixels
+- **mouseDrag**: Drag between coordinate points
+- **moveMouse**: Enhanced mouse positioning
+
+### 📊 Data Extraction
+- **getElementHierarchy**: Deep DOM structure analysis
+- **getConsoleMessages**: Monitor browser console output
+- **getNetworkRequests**: Track HTTP requests and responses  
+- **getLinks**: Extract all page links with metadata
+- **getImages**: Get all images with attributes
+- **getForms**: Analyze form structures and fields
+
+### 🎬 Visual & Media
+- **screenshot**: Basic screenshot capture
+- **takeScreenshot**: Advanced screenshots (full page, elements, custom paths)
+- **resize**: Control viewport dimensions
+
+### 📁 File & Dialog Operations
+- **uploadFiles**: Handle file input uploads
+- **handleDialog**: Manage alerts, confirms, and prompts
+
+### ⚙️ JavaScript Execution
+- **executeJavaScript**: Run JavaScript code
+- **evaluateWithReturn**: Execute JS with return values
 
 ### Core Browser Controls
 - **openBrowser** - Launch a new browser instance with optional headless mode

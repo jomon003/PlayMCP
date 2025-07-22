@@ -1,7 +1,7 @@
 {
   "name": "playmcp",
-  "version": "1.0.0",
-  "description": "Browser automation MCP server using Playwright",
+  "version": "2.0.0",
+  "description": "Comprehensive MCP server for browser automation with 38 powerful Playwright tools",
   "main": "dist/server.js",
   "type": "module",
   "scripts": {

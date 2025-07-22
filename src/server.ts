@@ -257,6 +257,250 @@ const GET_ELEMENT_HIERARCHY_TOOL: Tool = {
   }
 };
 
+const GO_FORWARD_TOOL: Tool = {
+  name: "goForward",
+  description: "Navigate forward to the next page in history",
+  inputSchema: {
+    type: "object",
+    properties: {},
+    required: []
+  }
+};
+
+const HOVER_TOOL: Tool = {
+  name: "hover",
+  description: "Hover over an element on the page",
+  inputSchema: {
+    type: "object",
+    properties: {
+      selector: { type: "string" }
+    },
+    required: ["selector"]
+  }
+};
+
+const DRAG_AND_DROP_TOOL: Tool = {
+  name: "dragAndDrop",
+  description: "Drag and drop from one element to another",
+  inputSchema: {
+    type: "object",
+    properties: {
+      sourceSelector: { type: "string" },
+      targetSelector: { type: "string" }
+    },
+    required: ["sourceSelector", "targetSelector"]
+  }
+};
+
+const SELECT_OPTION_TOOL: Tool = {
+  name: "selectOption",
+  description: "Select option(s) in a dropdown or select element",
+  inputSchema: {
+    type: "object",
+    properties: {
+      selector: { type: "string" },
+      values: { 
+        type: "array",
+        items: { type: "string" },
+        description: "Array of values to select"
+      }
+    },
+    required: ["selector", "values"]
+  }
+};
+
+const PRESS_KEY_TOOL: Tool = {
+  name: "pressKey",
+  description: "Press a key on the keyboard",
+  inputSchema: {
+    type: "object",
+    properties: {
+      key: { 
+        type: "string",
+        description: "Key to press (e.g., 'Enter', 'Escape', 'ArrowDown', etc.)"
+      }
+    },
+    required: ["key"]
+  }
+};
+
+const WAIT_FOR_TEXT_TOOL: Tool = {
+  name: "waitForText",
+  description: "Wait for specific text to appear on the page",
+  inputSchema: {
+    type: "object",
+    properties: {
+      text: { type: "string" },
+      timeout: { 
+        type: "number",
+        description: "Timeout in milliseconds (default: 30000)"
+      }
+    },
+    required: ["text"]
+  }
+};
+
+const WAIT_FOR_SELECTOR_TOOL: Tool = {
+  name: "waitForSelector",
+  description: "Wait for a specific selector to appear on the page",
+  inputSchema: {
+    type: "object",
+    properties: {
+      selector: { type: "string" },
+      timeout: { 
+        type: "number",
+        description: "Timeout in milliseconds (default: 30000)"
+      }
+    },
+    required: ["selector"]
+  }
+};
+
+const RESIZE_TOOL: Tool = {
+  name: "resize",
+  description: "Resize the browser viewport",
+  inputSchema: {
+    type: "object",
+    properties: {
+      width: { type: "number" },
+      height: { type: "number" }
+    },
+    required: ["width", "height"]
+  }
+};
+
+const HANDLE_DIALOG_TOOL: Tool = {
+  name: "handleDialog",
+  description: "Handle browser dialogs (alerts, confirms, prompts)",
+  inputSchema: {
+    type: "object",
+    properties: {
+      accept: { 
+        type: "boolean",
+        description: "Whether to accept (true) or dismiss (false) the dialog"
+      },
+      promptText: { 
+        type: "string",
+        description: "Text to enter in prompt dialogs (optional)"
+      }
+    },
+    required: ["accept"]
+  }
+};
+
+const GET_CONSOLE_MESSAGES_TOOL: Tool = {
+  name: "getConsoleMessages",
+  description: "Get console messages from the browser",
+  inputSchema: {
+    type: "object",
+    properties: {},
+    required: []
+  }
+};
+
+const GET_NETWORK_REQUESTS_TOOL: Tool = {
+  name: "getNetworkRequests",
+  description: "Get network requests made by the page",
+  inputSchema: {
+    type: "object",
+    properties: {},
+    required: []
+  }
+};
+
+const UPLOAD_FILES_TOOL: Tool = {
+  name: "uploadFiles",
+  description: "Upload files through a file input element",
+  inputSchema: {
+    type: "object",
+    properties: {
+      selector: { type: "string" },
+      filePaths: {
+        type: "array",
+        items: { type: "string" },
+        description: "Array of absolute file paths to upload"
+      }
+    },
+    required: ["selector", "filePaths"]
+  }
+};
+
+const EVALUATE_WITH_RETURN_TOOL: Tool = {
+  name: "evaluateWithReturn",
+  description: "Execute JavaScript code and return the result",
+  inputSchema: {
+    type: "object",
+    properties: {
+      script: { 
+        type: "string",
+        description: "JavaScript code to execute"
+      }
+    },
+    required: ["script"]
+  }
+};
+
+const TAKE_SCREENSHOT_TOOL: Tool = {
+  name: "takeScreenshot",
+  description: "Take a screenshot of the page or specific element",
+  inputSchema: {
+    type: "object",
+    properties: {
+      path: { type: "string" },
+      fullPage: { 
+        type: "boolean",
+        description: "Whether to capture the full scrollable page"
+      },
+      element: { 
+        type: "string",
+        description: "CSS selector for element screenshot"
+      }
+    },
+    required: ["path"]
+  }
+};
+
+const MOUSE_MOVE_TOOL: Tool = {
+  name: "mouseMove",
+  description: "Move mouse to specific coordinates",
+  inputSchema: {
+    type: "object",
+    properties: {
+      x: { type: "number" },
+      y: { type: "number" }
+    },
+    required: ["x", "y"]
+  }
+};
+
+const MOUSE_CLICK_TOOL: Tool = {
+  name: "mouseClick",
+  description: "Click at specific coordinates",
+  inputSchema: {
+    type: "object",
+    properties: {
+      x: { type: "number" },
+      y: { type: "number" }
+    },
+    required: ["x", "y"]
+  }
+};
+
+const MOUSE_DRAG_TOOL: Tool = {
+  name: "mouseDrag",
+  description: "Drag from one coordinate to another",
+  inputSchema: {
+    type: "object",
+    properties: {
+      startX: { type: "number" },
+      startY: { type: "number" },
+      endX: { type: "number" },
+      endY: { type: "number" }
+    },
+    required: ["startX", "startY", "endX", "endY"]
+  }
+};
+
 const CLOSE_BROWSER_TOOL: Tool = {
   name: "closeBrowser",
   description: "Close the browser",
@@ -288,6 +532,23 @@ const tools = {
   getElementContent: GET_ELEMENT_CONTENT_TOOL,
   getElementHierarchy: GET_ELEMENT_HIERARCHY_TOOL,
   executeJavaScript: EXECUTE_JAVASCRIPT_TOOL,
+  goForward: GO_FORWARD_TOOL,
+  hover: HOVER_TOOL,
+  dragAndDrop: DRAG_AND_DROP_TOOL,
+  selectOption: SELECT_OPTION_TOOL,
+  pressKey: PRESS_KEY_TOOL,
+  waitForText: WAIT_FOR_TEXT_TOOL,
+  waitForSelector: WAIT_FOR_SELECTOR_TOOL,
+  resize: RESIZE_TOOL,
+  handleDialog: HANDLE_DIALOG_TOOL,
+  getConsoleMessages: GET_CONSOLE_MESSAGES_TOOL,
+  getNetworkRequests: GET_NETWORK_REQUESTS_TOOL,
+  uploadFiles: UPLOAD_FILES_TOOL,
+  evaluateWithReturn: EVALUATE_WITH_RETURN_TOOL,
+  takeScreenshot: TAKE_SCREENSHOT_TOOL,
+  mouseMove: MOUSE_MOVE_TOOL,
+  mouseClick: MOUSE_CLICK_TOOL,
+  mouseDrag: MOUSE_DRAG_TOOL,
   closeBrowser: CLOSE_BROWSER_TOOL
 };
 
@@ -524,16 +785,213 @@ server.setRequestHandler('callTool', async (request) => {
         };
       }
 
-      case 'scroll': {
-        if (typeof args.x !== 'number' || typeof args.y !== 'number') {
+      case 'goForward': {
+        await playwrightController.goForward();
+        return {
+          content: [{ type: "text", text: "Navigated forward successfully" }]
+        };
+      }
+
+      case 'hover': {
+        if (!args.selector) {
           return {
-            content: [{ type: "text", text: "X and Y scroll amounts are required" }],
+            content: [{ type: "text", text: "Selector is required" }],
             isError: true
           };
         }
-        await playwrightController.scroll(args.x, args.y);
+        await playwrightController.hover(args.selector as string);
         return {
-          content: [{ type: "text", text: "Page scrolled successfully" }]
+          content: [{ type: "text", text: "Hover completed successfully" }]
+        };
+      }
+
+      case 'dragAndDrop': {
+        if (!args.sourceSelector || !args.targetSelector) {
+          return {
+            content: [{ type: "text", text: "Source and target selectors are required" }],
+            isError: true
+          };
+        }
+        await playwrightController.dragAndDrop(args.sourceSelector as string, args.targetSelector as string);
+        return {
+          content: [{ type: "text", text: "Drag and drop completed successfully" }]
+        };
+      }
+
+      case 'selectOption': {
+        if (!args.selector || !args.values) {
+          return {
+            content: [{ type: "text", text: "Selector and values are required" }],
+            isError: true
+          };
+        }
+        await playwrightController.selectOption(args.selector as string, args.values as string[]);
+        return {
+          content: [{ type: "text", text: "Option selected successfully" }]
+        };
+      }
+
+      case 'pressKey': {
+        if (!args.key) {
+          return {
+            content: [{ type: "text", text: "Key is required" }],
+            isError: true
+          };
+        }
+        await playwrightController.pressKey(args.key as string);
+        return {
+          content: [{ type: "text", text: "Key pressed successfully" }]
+        };
+      }
+
+      case 'waitForText': {
+        if (!args.text) {
+          return {
+            content: [{ type: "text", text: "Text is required" }],
+            isError: true
+          };
+        }
+        await playwrightController.waitForText(args.text as string, args.timeout as number);
+        return {
+          content: [{ type: "text", text: "Text found successfully" }]
+        };
+      }
+
+      case 'waitForSelector': {
+        if (!args.selector) {
+          return {
+            content: [{ type: "text", text: "Selector is required" }],
+            isError: true
+          };
+        }
+        await playwrightController.waitForSelector(args.selector as string, args.timeout as number);
+        return {
+          content: [{ type: "text", text: "Selector found successfully" }]
+        };
+      }
+
+      case 'resize': {
+        if (typeof args.width !== 'number' || typeof args.height !== 'number') {
+          return {
+            content: [{ type: "text", text: "Width and height are required" }],
+            isError: true
+          };
+        }
+        await playwrightController.resize(args.width, args.height);
+        return {
+          content: [{ type: "text", text: "Browser resized successfully" }]
+        };
+      }
+
+      case 'handleDialog': {
+        if (typeof args.accept !== 'boolean') {
+          return {
+            content: [{ type: "text", text: "Accept parameter is required" }],
+            isError: true
+          };
+        }
+        await playwrightController.handleDialog(args.accept, args.promptText as string);
+        return {
+          content: [{ type: "text", text: "Dialog handler set successfully" }]
+        };
+      }
+
+      case 'getConsoleMessages': {
+        const messages = await playwrightController.getConsoleMessages();
+        return {
+          content: [{ type: "text", text: JSON.stringify(messages, null, 2) }]
+        };
+      }
+
+      case 'getNetworkRequests': {
+        const requests = await playwrightController.getNetworkRequests();
+        return {
+          content: [{ type: "text", text: JSON.stringify(requests, null, 2) }]
+        };
+      }
+
+      case 'uploadFiles': {
+        if (!args.selector || !args.filePaths) {
+          return {
+            content: [{ type: "text", text: "Selector and file paths are required" }],
+            isError: true
+          };
+        }
+        await playwrightController.uploadFiles(args.selector as string, args.filePaths as string[]);
+        return {
+          content: [{ type: "text", text: "Files uploaded successfully" }]
+        };
+      }
+
+      case 'evaluateWithReturn': {
+        if (!args.script || typeof args.script !== 'string') {
+          return {
+            content: [{ type: "text", text: "JavaScript script is required" }],
+            isError: true
+          };
+        }
+        const result = await playwrightController.evaluateWithReturn(args.script);
+        return {
+          content: [{ 
+            type: "text", 
+            text: result !== undefined ? JSON.stringify(result, null, 2) : "null"
+          }]
+        };
+      }
+
+      case 'takeScreenshot': {
+        if (!args.path) {
+          return {
+            content: [{ type: "text", text: "Path is required" }],
+            isError: true
+          };
+        }
+        await playwrightController.takeScreenshot(args.path as string, {
+          fullPage: args.fullPage as boolean,
+          element: args.element as string
+        });
+        return {
+          content: [{ type: "text", text: "Screenshot taken successfully" }]
+        };
+      }
+
+      case 'mouseMove': {
+        if (typeof args.x !== 'number' || typeof args.y !== 'number') {
+          return {
+            content: [{ type: "text", text: "X and Y coordinates are required" }],
+            isError: true
+          };
+        }
+        await playwrightController.mouseMove(args.x, args.y);
+        return {
+          content: [{ type: "text", text: "Mouse moved successfully" }]
+        };
+      }
+
+      case 'mouseClick': {
+        if (typeof args.x !== 'number' || typeof args.y !== 'number') {
+          return {
+            content: [{ type: "text", text: "X and Y coordinates are required" }],
+            isError: true
+          };
+        }
+        await playwrightController.mouseClick(args.x, args.y);
+        return {
+          content: [{ type: "text", text: "Mouse clicked successfully" }]
+        };
+      }
+
+      case 'mouseDrag': {
+        if (typeof args.startX !== 'number' || typeof args.startY !== 'number' || 
+            typeof args.endX !== 'number' || typeof args.endY !== 'number') {
+          return {
+            content: [{ type: "text", text: "Start and end coordinates are required" }],
+            isError: true
+          };
+        }
+        await playwrightController.mouseDrag(args.startX, args.startY, args.endX, args.endY);
+        return {
+          content: [{ type: "text", text: "Mouse drag completed successfully" }]
         };
       }
 
