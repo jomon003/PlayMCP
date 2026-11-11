@@ -18,7 +18,7 @@
     "url": "git+https://github.com/jomon003/PlayMCP.git"
   },
   "license": "MIT",
-  "author": "",
+  "author": "jomon003",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

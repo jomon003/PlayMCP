@@ -37,6 +37,8 @@ A rewrite on the official MCP TypeScript SDK. It fixes several tools that didn't
 - The browser launches automatically on first use.
 - `click` options `button` and `doubleClick`; `type` options `clear` and `submit`; `waitForSelector` option `state`; a `clear` option for the console and network buffers.
 - Input validation with zod schemas, plus tool titles and read-only/destructive annotations.
+- Server instructions sent to the client at connection, with workflow tips for the model.
+- `AGENTS.md` for coding agents working on the repository.
 - `playmcp` bin entry, a test suite (`npm test`) and GitHub Actions CI.
 - Environment variables: `PLAYMCP_HEADLESS`, `PLAYMCP_TIMEOUT`, `PLAYMCP_NO_SANDBOX`, `PLAYMCP_DEBUG`.
 

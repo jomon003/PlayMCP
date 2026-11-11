@@ -20,6 +20,7 @@ test('speaks MCP over stdio and reports the package version', async () => {
   await client.connect(transport);
   try {
     assert.deepEqual(client.getServerVersion(), { name: 'playmcp', version: pkg.version });
+    assert.match(client.getInstructions() ?? '', /Typical loop/);
     await client.ping();
 
     const result = await client.callTool({
