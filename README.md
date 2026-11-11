@@ -6,10 +6,6 @@
 
 An [MCP](https://modelcontextprotocol.io) server that lets AI assistants drive a real Chromium browser through [Playwright](https://playwright.dev): navigate, click and type, read page content, run JavaScript, inspect console and network activity, and take screenshots.
 
-<a href="https://glama.ai/mcp/servers/@jomon003/PlayMCP">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/@jomon003/PlayMCP/badge" alt="PlayMCP MCP server" />
-</a>
-
 ## Install
 
 Requires Node.js 20 or later.
