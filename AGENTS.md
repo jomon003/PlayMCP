@@ -17,7 +17,7 @@ npm test                          # builds, then runs node:test on test/*.test.j
 npm run inspect                   # MCP Inspector against dist/index.js
 ```
 
-Run `npm test` before finishing any change. CI runs the same command on Node 20, 22 and 24.
+Run `npm test` before finishing any change. CI runs the same command on Node 20, 22 and 24 inside the `mcr.microsoft.com/playwright` image. When you upgrade `playwright`, update that image tag in `.github/workflows/ci.yml` to match.
 
 ## Layout
 

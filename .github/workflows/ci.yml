@@ -8,8 +8,10 @@ on:
 
 jobs:
   test:
-    # Pinned: Playwright's --with-deps targets specific Ubuntu releases.
     runs-on: ubuntu-24.04
+    # Chromium and its system libraries are preinstalled, so CI doesn't depend on apt mirrors.
+    # Keep the tag in step with the playwright version in package-lock.json.
+    container: mcr.microsoft.com/playwright:v1.65.0-noble
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -22,5 +24,4 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
       - run: npm test

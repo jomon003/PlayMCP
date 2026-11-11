@@ -27,7 +27,6 @@ A rewrite on the official MCP TypeScript SDK. It fixes several tools that didn't
 - Errors now include Playwright's actual reason instead of a generic message.
 - An action on a missing element now fails after 10 seconds (configurable) instead of 30.
 - The server reports its real version instead of `1.0.0`.
-- Chromium no longer launches with `--no-sandbox` unless `PLAYMCP_NO_SANDBOX=true`.
 - The browser is closed when the client disconnects.
 
 ### Added
@@ -40,7 +39,7 @@ A rewrite on the official MCP TypeScript SDK. It fixes several tools that didn't
 - Server instructions sent to the client at connection, with workflow tips for the model.
 - `AGENTS.md` for coding agents working on the repository.
 - `playmcp` bin entry, a test suite (`npm test`) and GitHub Actions CI.
-- Environment variables: `PLAYMCP_HEADLESS`, `PLAYMCP_TIMEOUT`, `PLAYMCP_NO_SANDBOX`, `PLAYMCP_DEBUG`.
+- Environment variables: `PLAYMCP_HEADLESS`, `PLAYMCP_TIMEOUT`, `PLAYMCP_DEBUG`.
 
 ## 2.0.0
 

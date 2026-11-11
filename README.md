@@ -103,7 +103,6 @@ Set these as environment variables in your client's server config (`"env": { …
 | --- | --- | --- |
 | `PLAYMCP_HEADLESS` | `false` | `true` runs the browser without a window. |
 | `PLAYMCP_TIMEOUT` | `10000` | Milliseconds to wait for elements before an action fails. |
-| `PLAYMCP_NO_SANDBOX` | `false` | `true` launches Chromium with `--no-sandbox`. Only use this when running as root in a container. |
 | `PLAYMCP_DEBUG` | unset | Any value logs browser events to stderr. |
 
 ## Security

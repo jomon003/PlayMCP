@@ -70,10 +70,7 @@ export class BrowserController {
     const headless = options.headless ?? process.env.PLAYMCP_HEADLESS === 'true';
     log('launching chromium', { headless });
     try {
-      this.browser = await chromium.launch({
-        headless,
-        args: process.env.PLAYMCP_NO_SANDBOX === 'true' ? ['--no-sandbox'] : [],
-      });
+      this.browser = await chromium.launch({ headless });
     } catch (error) {
       const message = error instanceof Error ? error.message.split('\n')[0] : String(error);
       throw new BrowserError(`Failed to launch Chromium: ${message}`, 'Install the browser with: npx playwright install chromium');
