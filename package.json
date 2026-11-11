@@ -38,7 +38,7 @@
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
     "start": "node dist/index.js",
-    "test": "npm run build && node --test \"test/*.test.js\"",
+    "test": "npm run build && node --test test/tools.test.js test/stdio.test.js",
     "install-browser": "playwright install chromium",
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js",
     "prepublishOnly": "npm run clean && npm test"

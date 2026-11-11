@@ -13,7 +13,7 @@ npm install
 npx playwright install chromium   # once; the tests need it
 npm run build                     # tsc -> dist/
 npm run typecheck
-npm test                          # builds, then runs node:test on test/*.test.js (~5s, headless)
+npm test                          # builds, then runs node:test on test/tools.test.js and test/stdio.test.js (~5s, headless)
 npm run inspect                   # MCP Inspector against dist/index.js
 ```
 
