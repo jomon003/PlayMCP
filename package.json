@@ -1,36 +1,55 @@
 {
   "name": "playmcp",
-  "version": "2.0.0",
-  "description": "Comprehensive MCP server for browser automation with 38 powerful Playwright tools",
-  "main": "dist/server.js",
-  "type": "module",
-  "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "tsc && node dist/server.js"
-  },
+  "version": "3.0.0",
+  "description": "MCP server for browser automation with Playwright: navigate, interact, extract content and capture screenshots.",
   "keywords": [
-    "browser",
-    "automation",
-    "playwright",
     "mcp",
-    "browser-automation"
+    "model-context-protocol",
+    "playwright",
+    "browser-automation",
+    "web-scraping"
   ],
+  "homepage": "https://github.com/jomon003/PlayMCP#readme",
+  "bugs": {
+    "url": "https://github.com/jomon003/PlayMCP/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jomon003/PlayMCP.git"
+  },
+  "license": "MIT",
+  "author": "",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "playmcp": "dist/index.js"
+  },
   "files": [
-    "dist/**/*",
+    "dist",
+    "!dist/**/*.map",
     "README.md",
-    "package.json"
+    "LICENSE"
   ],
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20"
   },
-  "author": "",
-  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test \"test/*.test.js\"",
+    "install-browser": "playwright install chromium",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "prepublishOnly": "npm run clean && npm test"
+  },
   "dependencies": {
-    "playwright": "^1.40.0"
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "playwright": "^1.65.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
+    "@types/node": "^22.20.5",
+    "typescript": "^5.9.3"
   }
 }

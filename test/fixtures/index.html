@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="description" content="PlayMCP test page" />
+    <title>PlayMCP Fixture</title>
+    <style>
+      body { margin: 0; font-family: sans-serif; }
+      #spacer { height: 3000px; }
+      #drop { width: 100px; height: 100px; background: #eee; }
+    </style>
+  </head>
+  <body>
+    <h1 id="heading" class="title">Hello PlayMCP</h1>
+    <a href="/second.html" title="Second page">Go to second</a>
+    <img src="/pixel.png" alt="pixel" />
+
+    <form id="login" action="/login" method="post">
+      <input id="username" name="username" type="text" required />
+      <select id="color" name="color">
+        <option value="red">Red</option>
+        <option value="green">Green</option>
+      </select>
+      <button id="submit" type="button">Submit</button>
+    </form>
+    <p id="result"></p>
+
+    <button id="prompt-button" type="button">Ask</button>
+    <p id="prompt-result"></p>
+
+    <div id="hover-target">Hover me</div>
+    <div id="drag" draggable="true">Drag me</div>
+    <div id="drop"></div>
+
+    <div id="tree"><section><article><p>deep</p></article></section></div>
+    <div id="spacer"></div>
+
+    <script>
+      console.log('fixture loaded');
+      document.getElementById('submit').addEventListener('click', () => {
+        const name = document.getElementById('username').value;
+        const color = document.getElementById('color').value;
+        document.getElementById('result').textContent = `Submitted ${name} ${color}`;
+      });
+      document.getElementById('prompt-button').addEventListener('click', () => {
+        document.getElementById('prompt-result').textContent = `Answer: ${prompt('Your name?')}`;
+      });
+      document.getElementById('hover-target').addEventListener('mouseenter', (event) => {
+        event.target.textContent = 'Hovered';
+      });
+      setTimeout(() => {
+        const late = document.createElement('p');
+        late.id = 'late';
+        late.textContent = 'Appeared later';
+        document.body.appendChild(late);
+      }, 300);
+    </script>
+  </body>
+</html>

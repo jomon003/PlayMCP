@@ -1,1040 +1,513 @@
-#!/usr/bin/env node
-import { Server } from './mcp/server.js';
-import { Tool } from './mcp/types.js';
-import { playwrightController } from './controllers/playwright.js';
-
-const OPEN_BROWSER_TOOL: Tool = {
-  name: "openBrowser",
-  description: "Launch a new browser instance",
-  inputSchema: {
-    type: "object",
-    properties: {
-      headless: { type: "boolean" },
-      debug: { type: "boolean" }
-    },
-    required: []
-  }
-};
-
-const NAVIGATE_TOOL: Tool = {
-  name: "navigate",
-  description: "Navigate to a URL",
-  inputSchema: {
-    type: "object",
-    properties: {
-      url: { type: "string" }
-    },
-    required: ["url"]
-  }
-};
-
-const TYPE_TOOL: Tool = {
-  name: "type",
-  description: "Type text into an element",
-  inputSchema: {
-    type: "object",
-    properties: {
-      selector: { type: "string" },
-      text: { type: "string" }
-    },
-    required: ["selector", "text"]
-  }
-};
-
-const CLICK_TOOL: Tool = {
-  name: "click",
-  description: "Click an element",
-  inputSchema: {
-    type: "object",
-    properties: {
-      selector: { type: "string" }
-    },
-    required: ["selector"]
-  }
-};
-
-const MOVE_MOUSE_TOOL: Tool = {
-  name: "moveMouse",
-  description: "Move mouse to coordinates",
-  inputSchema: {
-    type: "object",
-    properties: {
-      x: { type: "number" },
-      y: { type: "number" }
-    },
-    required: ["x", "y"]
-  }
-};
-
-const SCREENSHOT_TOOL: Tool = {
-  name: "screenshot",
-  description: "Take a screenshot",
-  inputSchema: {
-    type: "object",
-    properties: {
-      path: { type: "string" },
-      type: { type: "string", enum: ["viewport", "element", "page"] },
-      selector: { type: "string" }
-    },
-    required: ["path"]
-  }
-};
-
-const GET_PAGE_SOURCE_TOOL: Tool = {
-  name: "getPageSource",
-  description: "Get the HTML source code of the current page",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const GET_PAGE_TEXT_TOOL: Tool = {
-  name: "getPageText",
-  description: "Get the text content of the current page",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const GET_PAGE_TITLE_TOOL: Tool = {
-  name: "getPageTitle",
-  description: "Get the title of the current page",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const GET_PAGE_URL_TOOL: Tool = {
-  name: "getPageUrl",
-  description: "Get the URL of the current page",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const GET_SCRIPTS_TOOL: Tool = {
-  name: "getScripts",
-  description: "Get all JavaScript code from the current page",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const GET_STYLESHEETS_TOOL: Tool = {
-  name: "getStylesheets",
-  description: "Get all CSS stylesheets from the current page",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const GET_META_TAGS_TOOL: Tool = {
-  name: "getMetaTags",
-  description: "Get all meta tags from the current page",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const GET_LINKS_TOOL: Tool = {
-  name: "getLinks",
-  description: "Get all links from the current page",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const GET_IMAGES_TOOL: Tool = {
-  name: "getImages",
-  description: "Get all images from the current page",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const GET_FORMS_TOOL: Tool = {
-  name: "getForms",
-  description: "Get all forms from the current page",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const GET_ELEMENT_CONTENT_TOOL: Tool = {
-  name: "getElementContent",
-  description: "Get the HTML and text content of a specific element",
-  inputSchema: {
-    type: "object",
-    properties: {
-      selector: { type: "string" }
-    },
-    required: ["selector"]
-  }
-};
-
-const EXECUTE_JAVASCRIPT_TOOL: Tool = {
-  name: "executeJavaScript",
-  description: "Execute arbitrary JavaScript code on the current page and return the result",
-  inputSchema: {
-    type: "object",
-    properties: {
-      script: { 
-        type: "string",
-        description: "The JavaScript code to execute on the page. Can be expressions or statements."
-      }
-    },
-    required: ["script"]
-  }
-};
-
-const SCROLL_TOOL: Tool = {
-  name: "scroll",
-  description: "Scroll the page by specified amounts with enhanced feedback",
-  inputSchema: {
-    type: "object",
-    properties: {
-      x: { 
-        type: "number",
-        description: "Horizontal scroll amount in pixels (positive = right, negative = left)"
-      },
-      y: { 
-        type: "number", 
-        description: "Vertical scroll amount in pixels (positive = down, negative = up)"
-      },
-      smooth: {
-        type: "boolean",
-        description: "Whether to use smooth scrolling animation (default: false)"
-      }
-    },
-    required: ["x", "y"]
-  }
-};
-
-const GET_ELEMENT_HIERARCHY_TOOL: Tool = {
-  name: "getElementHierarchy",
-  description: "Get the hierarchical structure of page elements with parent-child relationships",
-  inputSchema: {
-    type: "object",
-    properties: {
-      selector: {
-        type: "string",
-        description: "CSS selector for root element (default: 'body')"
-      },
-      maxDepth: {
-        type: "number",
-        description: "Maximum depth to traverse (-1 for unlimited, default: 3)"
-      },
-      includeText: {
-        type: "boolean",
-        description: "Include text content of elements (default: false)"
-      },
-      includeAttributes: {
-        type: "boolean",
-        description: "Include element attributes (default: false)"
-      }
-    },
-    required: []
-  }
-};
-
-const GO_FORWARD_TOOL: Tool = {
-  name: "goForward",
-  description: "Navigate forward to the next page in history",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const HOVER_TOOL: Tool = {
-  name: "hover",
-  description: "Hover over an element on the page",
-  inputSchema: {
-    type: "object",
-    properties: {
-      selector: { type: "string" }
-    },
-    required: ["selector"]
-  }
-};
-
-const DRAG_AND_DROP_TOOL: Tool = {
-  name: "dragAndDrop",
-  description: "Drag and drop from one element to another",
-  inputSchema: {
-    type: "object",
-    properties: {
-      sourceSelector: { type: "string" },
-      targetSelector: { type: "string" }
-    },
-    required: ["sourceSelector", "targetSelector"]
-  }
-};
-
-const SELECT_OPTION_TOOL: Tool = {
-  name: "selectOption",
-  description: "Select option(s) in a dropdown or select element",
-  inputSchema: {
-    type: "object",
-    properties: {
-      selector: { type: "string" },
-      values: { 
-        type: "array",
-        items: { type: "string" },
-        description: "Array of values to select"
-      }
-    },
-    required: ["selector", "values"]
-  }
-};
-
-const PRESS_KEY_TOOL: Tool = {
-  name: "pressKey",
-  description: "Press a key on the keyboard",
-  inputSchema: {
-    type: "object",
-    properties: {
-      key: { 
-        type: "string",
-        description: "Key to press (e.g., 'Enter', 'Escape', 'ArrowDown', etc.)"
-      }
-    },
-    required: ["key"]
-  }
-};
-
-const WAIT_FOR_TEXT_TOOL: Tool = {
-  name: "waitForText",
-  description: "Wait for specific text to appear on the page",
-  inputSchema: {
-    type: "object",
-    properties: {
-      text: { type: "string" },
-      timeout: { 
-        type: "number",
-        description: "Timeout in milliseconds (default: 30000)"
-      }
-    },
-    required: ["text"]
-  }
-};
-
-const WAIT_FOR_SELECTOR_TOOL: Tool = {
-  name: "waitForSelector",
-  description: "Wait for a specific selector to appear on the page",
-  inputSchema: {
-    type: "object",
-    properties: {
-      selector: { type: "string" },
-      timeout: { 
-        type: "number",
-        description: "Timeout in milliseconds (default: 30000)"
-      }
-    },
-    required: ["selector"]
-  }
-};
-
-const RESIZE_TOOL: Tool = {
-  name: "resize",
-  description: "Resize the browser viewport",
-  inputSchema: {
-    type: "object",
-    properties: {
-      width: { type: "number" },
-      height: { type: "number" }
-    },
-    required: ["width", "height"]
-  }
-};
-
-const HANDLE_DIALOG_TOOL: Tool = {
-  name: "handleDialog",
-  description: "Handle browser dialogs (alerts, confirms, prompts)",
-  inputSchema: {
-    type: "object",
-    properties: {
-      accept: { 
-        type: "boolean",
-        description: "Whether to accept (true) or dismiss (false) the dialog"
-      },
-      promptText: { 
-        type: "string",
-        description: "Text to enter in prompt dialogs (optional)"
-      }
-    },
-    required: ["accept"]
-  }
-};
-
-const GET_CONSOLE_MESSAGES_TOOL: Tool = {
-  name: "getConsoleMessages",
-  description: "Get console messages from the browser",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const GET_NETWORK_REQUESTS_TOOL: Tool = {
-  name: "getNetworkRequests",
-  description: "Get network requests made by the page",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const UPLOAD_FILES_TOOL: Tool = {
-  name: "uploadFiles",
-  description: "Upload files through a file input element",
-  inputSchema: {
-    type: "object",
-    properties: {
-      selector: { type: "string" },
-      filePaths: {
-        type: "array",
-        items: { type: "string" },
-        description: "Array of absolute file paths to upload"
-      }
-    },
-    required: ["selector", "filePaths"]
-  }
-};
-
-const EVALUATE_WITH_RETURN_TOOL: Tool = {
-  name: "evaluateWithReturn",
-  description: "Execute JavaScript code and return the result",
-  inputSchema: {
-    type: "object",
-    properties: {
-      script: { 
-        type: "string",
-        description: "JavaScript code to execute"
-      }
-    },
-    required: ["script"]
-  }
-};
-
-const TAKE_SCREENSHOT_TOOL: Tool = {
-  name: "takeScreenshot",
-  description: "Take a screenshot of the page or specific element",
-  inputSchema: {
-    type: "object",
-    properties: {
-      path: { type: "string" },
-      fullPage: { 
-        type: "boolean",
-        description: "Whether to capture the full scrollable page"
-      },
-      element: { 
-        type: "string",
-        description: "CSS selector for element screenshot"
-      }
-    },
-    required: ["path"]
-  }
-};
-
-const MOUSE_MOVE_TOOL: Tool = {
-  name: "mouseMove",
-  description: "Move mouse to specific coordinates",
-  inputSchema: {
-    type: "object",
-    properties: {
-      x: { type: "number" },
-      y: { type: "number" }
-    },
-    required: ["x", "y"]
-  }
-};
-
-const MOUSE_CLICK_TOOL: Tool = {
-  name: "mouseClick",
-  description: "Click at specific coordinates",
-  inputSchema: {
-    type: "object",
-    properties: {
-      x: { type: "number" },
-      y: { type: "number" }
-    },
-    required: ["x", "y"]
-  }
-};
-
-const MOUSE_DRAG_TOOL: Tool = {
-  name: "mouseDrag",
-  description: "Drag from one coordinate to another",
-  inputSchema: {
-    type: "object",
-    properties: {
-      startX: { type: "number" },
-      startY: { type: "number" },
-      endX: { type: "number" },
-      endY: { type: "number" }
-    },
-    required: ["startX", "startY", "endX", "endY"]
-  }
-};
-
-const CLOSE_BROWSER_TOOL: Tool = {
-  name: "closeBrowser",
-  description: "Close the browser",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
-  }
-};
-
-const tools = {
-  openBrowser: OPEN_BROWSER_TOOL,
-  navigate: NAVIGATE_TOOL,
-  type: TYPE_TOOL,
-  click: CLICK_TOOL,
-  moveMouse: MOVE_MOUSE_TOOL,
-  scroll: SCROLL_TOOL,
-  screenshot: SCREENSHOT_TOOL,
-  getPageSource: GET_PAGE_SOURCE_TOOL,
-  getPageText: GET_PAGE_TEXT_TOOL,
-  getPageTitle: GET_PAGE_TITLE_TOOL,
-  getPageUrl: GET_PAGE_URL_TOOL,
-  getScripts: GET_SCRIPTS_TOOL,
-  getStylesheets: GET_STYLESHEETS_TOOL,
-  getMetaTags: GET_META_TAGS_TOOL,
-  getLinks: GET_LINKS_TOOL,
-  getImages: GET_IMAGES_TOOL,
-  getForms: GET_FORMS_TOOL,
-  getElementContent: GET_ELEMENT_CONTENT_TOOL,
-  getElementHierarchy: GET_ELEMENT_HIERARCHY_TOOL,
-  executeJavaScript: EXECUTE_JAVASCRIPT_TOOL,
-  goForward: GO_FORWARD_TOOL,
-  hover: HOVER_TOOL,
-  dragAndDrop: DRAG_AND_DROP_TOOL,
-  selectOption: SELECT_OPTION_TOOL,
-  pressKey: PRESS_KEY_TOOL,
-  waitForText: WAIT_FOR_TEXT_TOOL,
-  waitForSelector: WAIT_FOR_SELECTOR_TOOL,
-  resize: RESIZE_TOOL,
-  handleDialog: HANDLE_DIALOG_TOOL,
-  getConsoleMessages: GET_CONSOLE_MESSAGES_TOOL,
-  getNetworkRequests: GET_NETWORK_REQUESTS_TOOL,
-  uploadFiles: UPLOAD_FILES_TOOL,
-  evaluateWithReturn: EVALUATE_WITH_RETURN_TOOL,
-  takeScreenshot: TAKE_SCREENSHOT_TOOL,
-  mouseMove: MOUSE_MOVE_TOOL,
-  mouseClick: MOUSE_CLICK_TOOL,
-  mouseDrag: MOUSE_DRAG_TOOL,
-  closeBrowser: CLOSE_BROWSER_TOOL
-};
-
-const server = new Server(
-  {
-    name: "playmcp-browser",
-    version: "1.0.0",
-  },
-  {
-    capabilities: {
-      tools,
-    },
-  }
-);
-
-server.setRequestHandler('listTools', async () => ({
-  tools: Object.values(tools)
-}));
-
-server.setRequestHandler('callTool', async (request) => {
-  const { name, arguments: args = {} } = request.params;
-
-  try {
-    switch (name) {
-      case 'openBrowser': {
-        await playwrightController.openBrowser(
-          args.headless as boolean,
-          args.debug as boolean
-        );
-        return {
-          content: [{ type: "text", text: "Browser opened successfully" }]
-        };
-      }
-
-      case 'navigate': {
-        if (!args.url || typeof args.url !== 'string') {
-          return {
-            content: [{ type: "text", text: "URL is required" }],
-            isError: true
-          };
-        }
-        await playwrightController.navigate(args.url);
-        return {
-          content: [{ type: "text", text: "Navigation successful" }]
-        };
-      }
-
-      case 'type': {
-        if (!args.selector || !args.text) {
-          return {
-            content: [{ type: "text", text: "Selector and text are required" }],
-            isError: true
-          };
-        }
-        await playwrightController.type(args.selector as string, args.text as string);
-        return {
-          content: [{ type: "text", text: "Text entered successfully" }]
-        };
-      }
-
-      case 'click': {
-        if (!args.selector) {
-          return {
-            content: [{ type: "text", text: "Selector is required" }],
-            isError: true
-          };
-        }
-        await playwrightController.click(args.selector as string);
-        return {
-          content: [{ type: "text", text: "Click successful" }]
-        };
-      }
-
-      case 'moveMouse': {
-        if (typeof args.x !== 'number' || typeof args.y !== 'number') {
-          return {
-            content: [{ type: "text", text: "X and Y coordinates are required" }],
-            isError: true
-          };
-        }
-        await playwrightController.moveMouse(args.x, args.y);
-        return {
-          content: [{ type: "text", text: "Mouse moved successfully" }]
-        };
-      }
-
-      case 'scroll': {
-        if (typeof args.x !== 'number' || typeof args.y !== 'number') {
-          return {
-            content: [{ type: "text", text: "X and Y scroll amounts are required" }],
-            isError: true
-          };
-        }
-        const scrollResult = await playwrightController.scroll(
-          args.x, 
-          args.y, 
-          args.smooth as boolean || false
-        );
-        return {
-          content: [{ 
-            type: "text", 
-            text: JSON.stringify({
-              message: "Page scrolled successfully",
-              before: scrollResult.before,
-              after: scrollResult.after,
-              scrolled: {
-                x: scrollResult.after.x - scrollResult.before.x,
-                y: scrollResult.after.y - scrollResult.before.y
-              }
-            }, null, 2)
-          }]
-        };
-      }
-
-      case 'screenshot': {
-        if (!args.path) {
-          return {
-            content: [{ type: "text", text: "Path is required" }],
-            isError: true
-          };
-        }
-        await playwrightController.screenshot(args as any);
-        return {
-          content: [{ type: "text", text: "Screenshot taken successfully" }]
-        };
-      }
-
-      case 'getPageSource': {
-        const source = await playwrightController.getPageSource();
-        return {
-          content: [{ type: "text", text: source }]
-        };
-      }
-
-      case 'getPageText': {
-        const text = await playwrightController.getPageText();
-        return {
-          content: [{ type: "text", text }]
-        };
-      }
-
-      case 'getPageTitle': {
-        const title = await playwrightController.getPageTitle();
-        return {
-          content: [{ type: "text", text: title }]
-        };
-      }
-
-      case 'getPageUrl': {
-        const url = await playwrightController.getPageUrl();
-        return {
-          content: [{ type: "text", text: url }]
-        };
-      }
-
-      case 'getScripts': {
-        const scripts = await playwrightController.getScripts();
-        return {
-          content: [{ type: "text", text: scripts.join('\n') }]
-        };
-      }
-
-      case 'getStylesheets': {
-        const stylesheets = await playwrightController.getStylesheets();
-        return {
-          content: [{ type: "text", text: stylesheets.join('\n') }]
-        };
-      }      case 'getMetaTags': {
-        const metaTags = await playwrightController.getMetaTags();
-        return {
-          content: [{ type: "text", text: JSON.stringify(metaTags, null, 2) }]
-        };
-      }
-
-      case 'getLinks': {
-        const links = await playwrightController.getLinks();
-        return {
-          content: [{ type: "text", text: JSON.stringify(links, null, 2) }]
-        };
-      }
-
-      case 'getImages': {
-        const images = await playwrightController.getImages();
-        return {
-          content: [{ type: "text", text: JSON.stringify(images, null, 2) }]
-        };
-      }
-
-      case 'getForms': {
-        const forms = await playwrightController.getForms();
-        return {
-          content: [{ type: "text", text: JSON.stringify(forms, null, 2) }]
-        };
-      }
-
-      case 'getElementContent': {
-        if (!args.selector) {
-          return {
-            content: [{ type: "text", text: "Selector is required" }],
-            isError: true
-          };
-        }
-        const content = await playwrightController.getElementContent(args.selector as string);
-        return {
-          content: [{ type: "text", text: JSON.stringify(content, null, 2) }]
-        };
-      }
-
-      case 'getElementHierarchy': {
-        const hierarchy = await playwrightController.getElementHierarchy(
-          args.selector as string || 'body',
-          args.maxDepth as number || 3,
-          args.includeText as boolean || false,
-          args.includeAttributes as boolean || false
-        );
-        return {
-          content: [{ type: "text", text: JSON.stringify(hierarchy, null, 2) }]
-        };
-      }
-
-      case 'executeJavaScript': {
-        if (!args.script || typeof args.script !== 'string') {
-          return {
-            content: [{ type: "text", text: "JavaScript script is required" }],
-            isError: true
-          };
-        }
-        const result = await playwrightController.executeJavaScript(args.script);
-        return {
-          content: [{ 
-            type: "text", 
-            text: result !== undefined ? JSON.stringify(result, null, 2) : "Script executed successfully (no return value)"
-          }]
-        };
-      }
-
-      case 'goForward': {
-        await playwrightController.goForward();
-        return {
-          content: [{ type: "text", text: "Navigated forward successfully" }]
-        };
-      }
-
-      case 'hover': {
-        if (!args.selector) {
-          return {
-            content: [{ type: "text", text: "Selector is required" }],
-            isError: true
-          };
-        }
-        await playwrightController.hover(args.selector as string);
-        return {
-          content: [{ type: "text", text: "Hover completed successfully" }]
-        };
-      }
-
-      case 'dragAndDrop': {
-        if (!args.sourceSelector || !args.targetSelector) {
-          return {
-            content: [{ type: "text", text: "Source and target selectors are required" }],
-            isError: true
-          };
-        }
-        await playwrightController.dragAndDrop(args.sourceSelector as string, args.targetSelector as string);
-        return {
-          content: [{ type: "text", text: "Drag and drop completed successfully" }]
-        };
-      }
-
-      case 'selectOption': {
-        if (!args.selector || !args.values) {
-          return {
-            content: [{ type: "text", text: "Selector and values are required" }],
-            isError: true
-          };
-        }
-        await playwrightController.selectOption(args.selector as string, args.values as string[]);
-        return {
-          content: [{ type: "text", text: "Option selected successfully" }]
-        };
-      }
-
-      case 'pressKey': {
-        if (!args.key) {
-          return {
-            content: [{ type: "text", text: "Key is required" }],
-            isError: true
-          };
-        }
-        await playwrightController.pressKey(args.key as string);
-        return {
-          content: [{ type: "text", text: "Key pressed successfully" }]
-        };
-      }
-
-      case 'waitForText': {
-        if (!args.text) {
-          return {
-            content: [{ type: "text", text: "Text is required" }],
-            isError: true
-          };
-        }
-        await playwrightController.waitForText(args.text as string, args.timeout as number);
-        return {
-          content: [{ type: "text", text: "Text found successfully" }]
-        };
-      }
-
-      case 'waitForSelector': {
-        if (!args.selector) {
-          return {
-            content: [{ type: "text", text: "Selector is required" }],
-            isError: true
-          };
-        }
-        await playwrightController.waitForSelector(args.selector as string, args.timeout as number);
-        return {
-          content: [{ type: "text", text: "Selector found successfully" }]
-        };
-      }
-
-      case 'resize': {
-        if (typeof args.width !== 'number' || typeof args.height !== 'number') {
-          return {
-            content: [{ type: "text", text: "Width and height are required" }],
-            isError: true
-          };
-        }
-        await playwrightController.resize(args.width, args.height);
-        return {
-          content: [{ type: "text", text: "Browser resized successfully" }]
-        };
-      }
-
-      case 'handleDialog': {
-        if (typeof args.accept !== 'boolean') {
-          return {
-            content: [{ type: "text", text: "Accept parameter is required" }],
-            isError: true
-          };
-        }
-        await playwrightController.handleDialog(args.accept, args.promptText as string);
-        return {
-          content: [{ type: "text", text: "Dialog handler set successfully" }]
-        };
-      }
-
-      case 'getConsoleMessages': {
-        const messages = await playwrightController.getConsoleMessages();
-        return {
-          content: [{ type: "text", text: JSON.stringify(messages, null, 2) }]
-        };
-      }
-
-      case 'getNetworkRequests': {
-        const requests = await playwrightController.getNetworkRequests();
-        return {
-          content: [{ type: "text", text: JSON.stringify(requests, null, 2) }]
-        };
-      }
-
-      case 'uploadFiles': {
-        if (!args.selector || !args.filePaths) {
-          return {
-            content: [{ type: "text", text: "Selector and file paths are required" }],
-            isError: true
-          };
-        }
-        await playwrightController.uploadFiles(args.selector as string, args.filePaths as string[]);
-        return {
-          content: [{ type: "text", text: "Files uploaded successfully" }]
-        };
-      }
-
-      case 'evaluateWithReturn': {
-        if (!args.script || typeof args.script !== 'string') {
-          return {
-            content: [{ type: "text", text: "JavaScript script is required" }],
-            isError: true
-          };
-        }
-        const result = await playwrightController.evaluateWithReturn(args.script);
-        return {
-          content: [{ 
-            type: "text", 
-            text: result !== undefined ? JSON.stringify(result, null, 2) : "null"
-          }]
-        };
-      }
-
-      case 'takeScreenshot': {
-        if (!args.path) {
-          return {
-            content: [{ type: "text", text: "Path is required" }],
-            isError: true
-          };
-        }
-        await playwrightController.takeScreenshot(args.path as string, {
-          fullPage: args.fullPage as boolean,
-          element: args.element as string
-        });
-        return {
-          content: [{ type: "text", text: "Screenshot taken successfully" }]
-        };
-      }
-
-      case 'mouseMove': {
-        if (typeof args.x !== 'number' || typeof args.y !== 'number') {
-          return {
-            content: [{ type: "text", text: "X and Y coordinates are required" }],
-            isError: true
-          };
-        }
-        await playwrightController.mouseMove(args.x, args.y);
-        return {
-          content: [{ type: "text", text: "Mouse moved successfully" }]
-        };
-      }
-
-      case 'mouseClick': {
-        if (typeof args.x !== 'number' || typeof args.y !== 'number') {
-          return {
-            content: [{ type: "text", text: "X and Y coordinates are required" }],
-            isError: true
-          };
-        }
-        await playwrightController.mouseClick(args.x, args.y);
-        return {
-          content: [{ type: "text", text: "Mouse clicked successfully" }]
-        };
-      }
-
-      case 'mouseDrag': {
-        if (typeof args.startX !== 'number' || typeof args.startY !== 'number' || 
-            typeof args.endX !== 'number' || typeof args.endY !== 'number') {
-          return {
-            content: [{ type: "text", text: "Start and end coordinates are required" }],
-            isError: true
-          };
-        }
-        await playwrightController.mouseDrag(args.startX, args.startY, args.endX, args.endY);
-        return {
-          content: [{ type: "text", text: "Mouse drag completed successfully" }]
-        };
-      }
-
-      case 'closeBrowser': {
-        await playwrightController.closeBrowser();
-        return {
-          content: [{ type: "text", text: "Browser closed successfully" }]
-        };
-      }
-
-      default:
-        return {
-          content: [{ type: "text", text: `Unknown tool: ${name}` }],
-          isError: true
-        };
-    }
-  } catch (error: any) {
-    return {
-      content: [{
-        type: "text",
-        text: `Error: ${error.message}${error.suggestion ? `\nSuggestion: ${error.suggestion}` : ''}`
-      }],
-      isError: true
-    };
-  }
-});
-
-async function runServer() {
-  console.error("Browser Automation MCP Server starting...");
-  await server.connect();
+import { McpServer, type ToolCallback } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { ShapeOutput } from '@modelcontextprotocol/sdk/server/zod-compat.js';
+import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
+import { createRequire } from 'node:module';
+import { z } from 'zod';
+import { BrowserController, BrowserError } from './browser.js';
+
+const { version } = createRequire(import.meta.url)('../package.json') as { version: string };
+
+const READ_ONLY: ToolAnnotations = { readOnlyHint: true, openWorldHint: true };
+const ACTION: ToolAnnotations = { readOnlyHint: false, destructiveHint: false, openWorldHint: true };
+
+const selector = z.string().min(1).describe(`Playwright selector, e.g. "#login", "text=Sign in", "role=button[name='Submit']"`);
+const timeout = z.number().int().positive().optional().describe('Timeout in milliseconds (default 10000, or PLAYMCP_TIMEOUT)');
+const clear = z.boolean().optional().describe('Clear the buffer after reading (default false)');
+
+function text(value: unknown): CallToolResult {
+  const body = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+  return { content: [{ type: 'text', text: body ?? 'undefined' }] };
 }
 
-// Handle process exit
-process.on('SIGINT', async () => {
-  try {
-    await playwrightController.closeBrowser();
-  } catch (error) {
-    // Ignore errors during cleanup
-  }
-  process.exit(0);
-});
+function errorResult(error: unknown): CallToolResult {
+  const message = error instanceof Error ? error.message : String(error);
+  // Playwright appends a long call log; the first lines carry the useful part.
+  const summary = message.split('\n').slice(0, 6).join('\n');
+  const hint = error instanceof BrowserError && error.hint ? `\nHint: ${error.hint}` : '';
+  return { content: [{ type: 'text', text: `Error: ${summary}${hint}` }], isError: true };
+}
 
-runServer().catch((error) => {
-  console.error("Fatal error running server:", error);
-  process.exit(1);
-});
+export function createServer(browser = new BrowserController()): McpServer {
+  const server = new McpServer({ name: 'playmcp', version }, { capabilities: { tools: {} } });
+
+  // Wraps every handler so thrown errors become tool errors the model can read and recover from.
+  const tool = <Shape extends z.ZodRawShape = {}>(
+    name: string,
+    config: { title: string; description: string; inputSchema?: Shape; annotations: ToolAnnotations },
+    handler: (args: ShapeOutput<Shape>) => Promise<CallToolResult>,
+  ) => {
+    const callback = async (args: ShapeOutput<Shape>) => {
+      try {
+        return await handler(args);
+      } catch (error) {
+        return errorResult(error);
+      }
+    };
+    // An empty shape (rather than none) gives every tool the same (args, extra) callback signature.
+    // The SDK's conditional callback type can't resolve for a generic Shape, hence the cast.
+    const inputSchema = config.inputSchema ?? ({} as Shape);
+    return server.registerTool(name, { ...config, inputSchema }, callback as unknown as ToolCallback<Shape>);
+  };
+
+  // Browser lifecycle
+
+  tool(
+    'openBrowser',
+    {
+      title: 'Open browser',
+      description:
+        'Launch Chromium. Optional: other tools launch a browser with default settings automatically. Calling again while a browser is open does nothing.',
+      inputSchema: {
+        headless: z.boolean().optional().describe('Run without a visible window (default false, or PLAYMCP_HEADLESS)'),
+        width: z.number().int().positive().optional().describe('Viewport width (default 1280)'),
+        height: z.number().int().positive().optional().describe('Viewport height (default 720)'),
+      },
+      annotations: ACTION,
+    },
+    async ({ headless, width, height }) => {
+      await browser.open({ headless, viewport: { width: width ?? 1280, height: height ?? 720 } });
+      return text('Browser opened');
+    },
+  );
+
+  tool(
+    'closeBrowser',
+    { title: 'Close browser', description: 'Close the browser and discard its session.', annotations: ACTION },
+    async () => {
+      await browser.close();
+      return text('Browser closed');
+    },
+  );
+
+  tool(
+    'resize',
+    {
+      title: 'Resize viewport',
+      description: 'Set the viewport size in CSS pixels.',
+      inputSchema: { width: z.number().int().positive(), height: z.number().int().positive() },
+      annotations: ACTION,
+    },
+    async ({ width, height }) => {
+      await browser.resize(width, height);
+      return text(`Viewport resized to ${width}x${height}`);
+    },
+  );
+
+  // Navigation
+
+  tool(
+    'navigate',
+    {
+      title: 'Navigate',
+      description: 'Load a URL in the current page and wait for the DOM to be ready.',
+      inputSchema: { url: z.string().min(1).describe('Absolute URL, including the scheme') },
+      annotations: ACTION,
+    },
+    async ({ url }) => text(await browser.navigate(url)),
+  );
+
+  tool(
+    'goBack',
+    { title: 'Go back', description: 'Go back one entry in the page history.', annotations: ACTION },
+    async () => text(`Now at ${await browser.goBack()}`),
+  );
+
+  tool(
+    'goForward',
+    { title: 'Go forward', description: 'Go forward one entry in the page history.', annotations: ACTION },
+    async () => text(`Now at ${await browser.goForward()}`),
+  );
+
+  tool(
+    'reload',
+    { title: 'Reload', description: 'Reload the current page.', annotations: ACTION },
+    async () => text(`Reloaded ${await browser.reload()}`),
+  );
+
+  // Interaction
+
+  tool(
+    'click',
+    {
+      title: 'Click element',
+      description: 'Click the element matching a selector. Waits for it to be visible and enabled.',
+      inputSchema: {
+        selector,
+        button: z.enum(['left', 'right', 'middle']).optional(),
+        doubleClick: z.boolean().optional(),
+      },
+      annotations: ACTION,
+    },
+    async ({ selector, button, doubleClick }) => {
+      await browser.click(selector, { button, doubleClick });
+      return text(`Clicked ${selector}`);
+    },
+  );
+
+  tool(
+    'type',
+    {
+      title: 'Type text',
+      description: 'Enter text into an input, textarea or contenteditable element.',
+      inputSchema: {
+        selector,
+        text: z.string(),
+        clear: z.boolean().optional().describe('Replace existing content (default true). If false, types key by key.'),
+        submit: z.boolean().optional().describe('Press Enter afterwards (default false)'),
+      },
+      annotations: ACTION,
+    },
+    async ({ selector, text: value, clear, submit }) => {
+      await browser.type(selector, value, { clear, submit });
+      return text(`Typed into ${selector}`);
+    },
+  );
+
+  tool(
+    'hover',
+    { title: 'Hover', description: 'Move the mouse over an element.', inputSchema: { selector }, annotations: ACTION },
+    async ({ selector }) => {
+      await browser.hover(selector);
+      return text(`Hovered ${selector}`);
+    },
+  );
+
+  tool(
+    'dragAndDrop',
+    {
+      title: 'Drag and drop',
+      description: 'Drag one element onto another.',
+      inputSchema: { sourceSelector: selector, targetSelector: selector },
+      annotations: ACTION,
+    },
+    async ({ sourceSelector, targetSelector }) => {
+      await browser.dragAndDrop(sourceSelector, targetSelector);
+      return text(`Dragged ${sourceSelector} to ${targetSelector}`);
+    },
+  );
+
+  tool(
+    'selectOption',
+    {
+      title: 'Select option',
+      description: 'Select one or more options in a <select> element, by value or label.',
+      inputSchema: { selector, values: z.array(z.string()).min(1) },
+      annotations: ACTION,
+    },
+    async ({ selector, values }) => text({ selected: await browser.selectOption(selector, values) }),
+  );
+
+  tool(
+    'pressKey',
+    {
+      title: 'Press key',
+      description: 'Press a key or key combination on the focused element, e.g. "Enter", "Escape", "Control+A".',
+      inputSchema: { key: z.string().min(1) },
+      annotations: ACTION,
+    },
+    async ({ key }) => {
+      await browser.pressKey(key);
+      return text(`Pressed ${key}`);
+    },
+  );
+
+  tool(
+    'uploadFiles',
+    {
+      title: 'Upload files',
+      description: 'Set the files of an <input type="file"> element.',
+      inputSchema: { selector, filePaths: z.array(z.string().min(1)).describe('Absolute paths to local files') },
+      annotations: ACTION,
+    },
+    async ({ selector, filePaths }) => {
+      await browser.uploadFiles(selector, filePaths);
+      return text(`Set ${filePaths.length} file(s) on ${selector}`);
+    },
+  );
+
+  tool(
+    'handleDialog',
+    {
+      title: 'Handle next dialog',
+      description:
+        'Choose how to answer the next alert, confirm or prompt dialog. Call this before the action that opens it. Dialogs without a policy are dismissed.',
+      inputSchema: {
+        accept: z.boolean().describe('Accept (true) or dismiss (false)'),
+        promptText: z.string().optional().describe('Text to enter in a prompt dialog'),
+      },
+      annotations: ACTION,
+    },
+    async ({ accept, promptText }) => {
+      browser.setDialogPolicy({ accept, promptText });
+      return text(`The next dialog will be ${accept ? 'accepted' : 'dismissed'}`);
+    },
+  );
+
+  // Mouse and scrolling
+
+  tool(
+    'mouseMove',
+    {
+      title: 'Move mouse',
+      description: 'Move the mouse to viewport coordinates.',
+      inputSchema: { x: z.number(), y: z.number() },
+      annotations: ACTION,
+    },
+    async ({ x, y }) => {
+      await browser.mouseMove(x, y);
+      return text(`Mouse at (${x}, ${y})`);
+    },
+  );
+
+  tool(
+    'mouseClick',
+    {
+      title: 'Click at position',
+      description: 'Click at viewport coordinates. Without coordinates, clicks at the current mouse position.',
+      inputSchema: { x: z.number().optional(), y: z.number().optional() },
+      annotations: ACTION,
+    },
+    async ({ x, y }) => {
+      const at = await browser.mouseClick(x, y);
+      return text(`Clicked at (${at.x}, ${at.y})`);
+    },
+  );
+
+  tool(
+    'mouseDrag',
+    {
+      title: 'Drag mouse',
+      description: 'Press the mouse at one point, move to another and release.',
+      inputSchema: { startX: z.number(), startY: z.number(), endX: z.number(), endY: z.number() },
+      annotations: ACTION,
+    },
+    async ({ startX, startY, endX, endY }) => {
+      await browser.mouseDrag(startX, startY, endX, endY);
+      return text(`Dragged from (${startX}, ${startY}) to (${endX}, ${endY})`);
+    },
+  );
+
+  tool(
+    'scroll',
+    {
+      title: 'Scroll',
+      description: 'Scroll the page by a pixel offset and report the position before and after.',
+      inputSchema: {
+        x: z.number().describe('Horizontal offset; positive scrolls right'),
+        y: z.number().describe('Vertical offset; positive scrolls down'),
+        smooth: z.boolean().optional(),
+      },
+      annotations: ACTION,
+    },
+    async ({ x, y, smooth }) => text(await browser.scroll(x, y, smooth)),
+  );
+
+  // Waiting
+
+  tool(
+    'waitForText',
+    {
+      title: 'Wait for text',
+      description: 'Wait until text is visible on the page.',
+      inputSchema: { text: z.string().min(1), timeout },
+      annotations: READ_ONLY,
+    },
+    async ({ text: value, timeout }) => {
+      await browser.waitForText(value, timeout);
+      return text(`Found "${value}"`);
+    },
+  );
+
+  tool(
+    'waitForSelector',
+    {
+      title: 'Wait for selector',
+      description: 'Wait until an element reaches a state (visible by default).',
+      inputSchema: { selector, state: z.enum(['attached', 'detached', 'visible', 'hidden']).optional(), timeout },
+      annotations: READ_ONLY,
+    },
+    async ({ selector, state, timeout }) => {
+      await browser.waitForSelector(selector, timeout, state);
+      return text(`${selector} is ${state ?? 'visible'}`);
+    },
+  );
+
+  // Capture
+
+  tool(
+    'screenshot',
+    {
+      title: 'Screenshot',
+      description:
+        'Capture the viewport, the full page or one element. Returns the image, and also saves it when a path is given.',
+      inputSchema: {
+        path: z.string().optional().describe('File path to save to'),
+        fullPage: z.boolean().optional().describe('Capture the whole scrollable page (default false)'),
+        selector: selector.optional().describe('Capture only this element'),
+        format: z.enum(['png', 'jpeg']).optional(),
+      },
+      annotations: READ_ONLY,
+    },
+    async ({ path, fullPage, selector, format = 'png' }) => {
+      const image = await browser.screenshot({ path, fullPage, selector, format });
+      return {
+        content: [
+          { type: 'image', data: image.toString('base64'), mimeType: `image/${format}` },
+          ...(path ? [{ type: 'text' as const, text: `Saved to ${path}` }] : []),
+        ],
+      };
+    },
+  );
+
+  // Page content
+
+  tool(
+    'getPageInfo',
+    { title: 'Page info', description: 'Get the current URL and title.', annotations: READ_ONLY },
+    async () => text(await browser.getPageInfo()),
+  );
+
+  tool(
+    'getPageText',
+    { title: 'Page text', description: 'Get the visible text of the page.', annotations: READ_ONLY },
+    async () => text(await browser.getPageText()),
+  );
+
+  tool(
+    'getPageSource',
+    { title: 'Page HTML', description: 'Get the full HTML of the page. Can be large.', annotations: READ_ONLY },
+    async () => text(await browser.getPageSource()),
+  );
+
+  tool(
+    'getElementContent',
+    {
+      title: 'Element content',
+      description: 'Get the inner HTML and visible text of the first matching element.',
+      inputSchema: { selector },
+      annotations: READ_ONLY,
+    },
+    async ({ selector }) => text(await browser.getElementContent(selector)),
+  );
+
+  tool(
+    'inspectElement',
+    {
+      title: 'Inspect element',
+      description: 'Get the tag, attributes, text, bounding box and visibility of the first matching element.',
+      inputSchema: { selector },
+      annotations: READ_ONLY,
+    },
+    async ({ selector }) => text(await browser.inspectElement(selector)),
+  );
+
+  tool(
+    'getElementHierarchy',
+    {
+      title: 'Element hierarchy',
+      description: 'Get the DOM tree under an element, as nested JSON.',
+      inputSchema: {
+        selector: selector.optional().describe('Root element (default "body")'),
+        maxDepth: z.number().int().min(-1).optional().describe('Levels to descend; -1 for unlimited (default 3)'),
+        includeText: z.boolean().optional().describe("Include each element's own text (default false)"),
+        includeAttributes: z.boolean().optional().describe('Include attributes other than id and class (default false)'),
+      },
+      annotations: READ_ONLY,
+    },
+    async ({ selector, maxDepth, includeText, includeAttributes }) =>
+      text(
+        await browser.getElementHierarchy({
+          selector: selector ?? 'body',
+          maxDepth: maxDepth ?? 3,
+          includeText: includeText ?? false,
+          includeAttributes: includeAttributes ?? false,
+        }),
+      ),
+  );
+
+  tool(
+    'getLinks',
+    { title: 'Links', description: 'List all links with resolved href, text and title.', annotations: READ_ONLY },
+    async () => text(await browser.getLinks()),
+  );
+
+  tool(
+    'getImages',
+    { title: 'Images', description: 'List all images with src, alt text and natural size.', annotations: READ_ONLY },
+    async () => text(await browser.getImages()),
+  );
+
+  tool(
+    'getForms',
+    { title: 'Forms', description: 'List all forms and their fields.', annotations: READ_ONLY },
+    async () => text(await browser.getForms()),
+  );
+
+  tool(
+    'getMetaTags',
+    { title: 'Meta tags', description: 'List all <meta> tags.', annotations: READ_ONLY },
+    async () => text(await browser.getMetaTags()),
+  );
+
+  tool(
+    'getScripts',
+    {
+      title: 'Scripts',
+      description: 'Get the source of inline scripts and the URLs of external ones.',
+      annotations: READ_ONLY,
+    },
+    async () => text((await browser.getScripts()).join('\n\n')),
+  );
+
+  tool(
+    'getStylesheets',
+    {
+      title: 'Stylesheets',
+      description: 'Get the source of inline styles and the URLs of external stylesheets.',
+      annotations: READ_ONLY,
+    },
+    async () => text((await browser.getStylesheets()).join('\n\n')),
+  );
+
+  // JavaScript and diagnostics
+
+  tool(
+    'executeJavaScript',
+    {
+      title: 'Run JavaScript',
+      description:
+        'Run JavaScript in the page and return the result as JSON. Accepts an expression ("document.title") or statements with return ("const n = 1; return n + 1"). await is allowed.',
+      inputSchema: { script: z.string().min(1) },
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
+    },
+    async ({ script }) => {
+      // Always JSON, so a string result ("x") is distinguishable from other values.
+      const result = await browser.evaluate(script);
+      return { content: [{ type: 'text', text: JSON.stringify(result) ?? 'undefined' }] };
+    },
+  );
+
+  tool(
+    'getConsoleMessages',
+    {
+      title: 'Console messages',
+      description: 'Get console output and uncaught errors from the page since it was opened (last 1000).',
+      inputSchema: { clear },
+      annotations: READ_ONLY,
+    },
+    async ({ clear }) => text(browser.getConsoleMessages(clear)),
+  );
+
+  tool(
+    'getNetworkRequests',
+    {
+      title: 'Network requests',
+      description: 'Get requests made by the page since it was opened, with status codes (last 1000).',
+      inputSchema: { clear },
+      annotations: READ_ONLY,
+    },
+    async ({ clear }) => text(browser.getNetworkRequests(clear)),
+  );
+
+  return server;
+}
